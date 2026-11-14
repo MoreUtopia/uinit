@@ -7,10 +7,10 @@ pub fn setup_mounts() {
     let ram_flags = MountFlags::NOSUID | MountFlags::NODEV;
 
     let mounts = [
-        ("ramfs",    "/tmp",  "ramfs",    ram_flags),
-        ("proc",     "/proc", "proc",     proc_common),
-        ("sysfs",    "/sys",  "sysfs",    sys_common),
-        ("devtmpfs", "/dev",  "devtmpfs", dev_common),
+        ("ramfs", "/tmp", "ramfs", ram_flags),
+        ("proc", "/proc", "proc", proc_common),
+        ("sysfs", "/sys", "sysfs", sys_common),
+        ("devtmpfs", "/dev", "devtmpfs", dev_common),
     ];
 
     for (src, target, fstype, flags) in mounts {

@@ -1,7 +1,14 @@
-use std::process::{Command, exit};
 use rustix::process::getpid;
+use std::process::{Command, exit};
 
+mod config;
 mod mount;
+mod info;
+
+use crate::config::UinitConfig;
+use crate::info::print_start;
+
+static PATH: &str = "/etc/uinit.toml";
 
 fn main() {
     if !getpid().is_init() {
@@ -9,31 +16,34 @@ fn main() {
         exit(1);
     }
 
-    let init_app = "/usr/bin/bash";
-    let path = "/usr/bin:/sbin:/bin:/";
+    print_start();
+
+    let config: UinitConfig = std::fs::read_to_string(PATH)
+        .ok()
+        .and_then(|content| toml::from_str(&content).ok())
+        .unwrap_or_default();
 
     mount::setup_mounts();
 
     loop {
-        let child = Command::new(init_app)
-            .env("PATH", path)
+        let child = Command::new(&config.init_executable)
+            .args(&config.args)
+            .envs(config.env.iter().map(|(k, v)| (k, v)))
             .spawn();
 
         match child {
-            Ok(mut app) => {
-                match app.wait() {
-                    Ok(status) => {
-                        if let Some(exit_code) = status.code() {
-                            eprintln!("exited: {exit_code}");
-                        }
-                    }
-                    Err(e) => {
-                        eprintln!("error: {e}");
+            Ok(mut app) => match app.wait() {
+                Ok(status) => {
+                    if let Some(exit_code) = status.code() {
+                        eprintln!("exited: {exit_code}");
                     }
                 }
-            }
+                Err(e) => {
+                    eprintln!("error: {e}");
+                }
+            },
             Err(e) => {
-                eprintln!("init shell failed: {e}");
+                eprintln!("init executable failed: {e}");
                 println!("starting again");
                 std::thread::sleep(std::time::Duration::from_secs(1));
             }

@@ -12,9 +12,9 @@ Right now It was only checked for working on x86_64 but RISC-V64 will be support
 # Roadmap for 1.0-stable
 
 ## Configuration
-- [ ] Configuration file - `/etc/uinit.toml`
-    - [ ] Configure environment variables (like `PATH`, `HOSTNAME`, `USERNAME`).
-    - [ ] Configure default shell.
+- [X] Configuration file - `/etc/uinit.toml`
+    - [X] Configure environment variables (like `PATH`).
+    - [X] Configure default init executable.
     - [ ] Configure mount points.
 
 ## System Initialization
@@ -37,6 +37,6 @@ Right now It was only checked for working on x86_64 but RISC-V64 will be support
 - [ ] Improve error handling and add more logs
 
 ## Documentation
-- [ ] Create example configuration.
+- [X] Create example configuration.
 - [X] Add installation instructions.
 - [ ] Document supported features and limitations.
