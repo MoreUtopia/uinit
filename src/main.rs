@@ -8,7 +8,7 @@ mod mount;
 use crate::config::UinitConfig;
 use crate::info::print_start;
 
-static PATH: &str = "/etc/uinit.toml";
+const PATH: &str = "/etc/uinit.toml";
 
 fn main() {
     if !getpid().is_init() {
@@ -21,11 +21,19 @@ fn main() {
     let config: UinitConfig = std::fs::read_to_string(PATH)
         .ok()
         .and_then(|content| toml::from_str(&content).ok())
-        .unwrap_or_default();
+        .unwrap_or_else(|| {
+            println!("couldn't read config file: {PATH}, using default configuration");
+            UinitConfig::default()
+        });
 
-    mount::setup_mounts();
+    mount::setup_mounts(&config.mounts);
 
     loop {
+        println!(
+            "running {} with args {}",
+            config.init_executable.display(),
+            config.args.join(" ")
+        );
         let child = Command::new(&config.init_executable)
             .args(&config.args)
             .envs(config.env.iter().map(|(k, v)| (k, v)))

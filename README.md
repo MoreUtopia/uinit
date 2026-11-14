@@ -7,7 +7,7 @@ The goal is to be lightweight, simple, reliable and easy way to configure (and i
 
 Remember that some functionality can't be added until it will be supported in Utopia kernel.
 
-Right now It was only checked for working on x86_64 but RISC-V64 will be supported.
+Right now Uinit supports only x86_64.
 
 # Roadmap for 1.0-stable
 
@@ -23,7 +23,7 @@ Right now It was only checked for working on x86_64 but RISC-V64 will be support
 
 ## Process Management
 - [X] Restart init shell when it exits.
-- [ ] Configurable restart policies.
+- [ ] Configurable exit policies.
 - [ ] Track child processes.
 
 ## System
@@ -32,9 +32,9 @@ Right now It was only checked for working on x86_64 but RISC-V64 will be support
     - [ ] Unmount filesystems before shutdown/reboot.
 
 ## Reliability
-- [ ] Handle invalid configuration files.
+- [X] Handle invalid configuration files.
+- [X] Improve error handling and add more logs.
 - [ ] Prevent infinite restart loops.
-- [ ] Improve error handling and add more logs
 
 ## Documentation
 - [X] Create example configuration.

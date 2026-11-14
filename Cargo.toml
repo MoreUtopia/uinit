@@ -1,9 +1,9 @@
 [package]
 name = "uinit"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 
 [dependencies]
-rustix = { version = "1.1.6", features = ["mount", "process", "system"] }
+rustix = { version = "1.1.6", features = ["all-apis"] }
 serde = { version = "1.0.229", features = ["derive"] }
 toml = "1.2.1"
