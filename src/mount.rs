@@ -1,22 +1,56 @@
+use crate::config::Mounts;
 use rustix::mount::{MountFlags, mount};
+use std::ffi::CStr;
 
-pub fn setup_mounts() {
-    let proc_common = MountFlags::NOSUID | MountFlags::NOEXEC | MountFlags::NODEV;
-    let sys_common = MountFlags::NOSUID | MountFlags::NOEXEC | MountFlags::NODEV;
-    let dev_common = MountFlags::NOSUID;
-    let ram_flags = MountFlags::NOSUID | MountFlags::NODEV;
+struct MountSpec {
+    src: &'static str,
+    target: &'static str,
+    fstype: &'static str,
+    flags: MountFlags,
+    data: Option<&'static CStr>,
+}
 
-    let mounts = [
-        ("ramfs", "/tmp", "ramfs", ram_flags),
-        ("proc", "/proc", "proc", proc_common),
-        ("sysfs", "/sys", "sysfs", sys_common),
-        ("devtmpfs", "/dev", "devtmpfs", dev_common),
-    ];
+impl Mounts {
+    fn spec(self) -> MountSpec {
+        match self {
+            Mounts::Ramfs => MountSpec {
+                src: "ramfs",
+                target: "/tmp",
+                fstype: "ramfs",
+                flags: MountFlags::NOSUID | MountFlags::NODEV,
+                data: None,
+            },
+            Mounts::Proc => MountSpec {
+                src: "proc",
+                target: "/proc",
+                fstype: "proc",
+                flags: MountFlags::NOSUID | MountFlags::NODEV | MountFlags::NOEXEC,
+                data: None,
+            },
+            Mounts::Sysfs => MountSpec {
+                src: "sysfs",
+                target: "/sys",
+                fstype: "sysfs",
+                flags: MountFlags::NOSUID | MountFlags::NODEV | MountFlags::NOEXEC,
+                data: None,
+            },
+            Mounts::Tmpdevfs => MountSpec {
+                src: "devtmpfs",
+                target: "/dev",
+                fstype: "devtmpfs",
+                flags: MountFlags::NOSUID,
+                data: None,
+            },
+        }
+    }
+}
 
-    for (src, target, fstype, flags) in mounts {
-        match mount(src, target, fstype, flags, None) {
-            Ok(()) => println!("mounted {fstype}"),
-            Err(e) => println!("failed to mount {fstype}: {e}"),
+pub fn setup_mounts(mounts: &[Mounts]) {
+    for &m in mounts {
+        let spec = m.spec();
+        match mount(spec.src, spec.target, spec.fstype, spec.flags, spec.data) {
+            Ok(()) => println!("mounted {} on {}", spec.fstype, spec.target),
+            Err(e) => eprintln!("failed to mount {} on {}: {e}", spec.fstype, spec.target),
         }
     }
 }
