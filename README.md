@@ -11,10 +11,6 @@ Right now It was only checked for working on x86_64 but RISC-V64 will be support
 
 # Roadmap for 1.0-stable
 
-## Building
-- [ ] Use Mimalloc as allocator for better performance.
-- [ ] Use statically linked MUSL libc for portability across multiple rootfs.
-
 ## Configuration
 - [ ] Configuration file - `/etc/uinit.toml`
     - [ ] Configure environment variables (like `PATH`, `HOSTNAME`, `USERNAME`).
@@ -22,7 +18,7 @@ Right now It was only checked for working on x86_64 but RISC-V64 will be support
     - [ ] Configure mount points.
 
 ## System Initialization
-- [ ] Check for being PID 1.
+- [X] Check for being PID 1.
 - [X] Mount pseudo filesystems (`proc`, `sysfs`, `devtmpfs`, `ramfs`).
 
 ## Process Management
