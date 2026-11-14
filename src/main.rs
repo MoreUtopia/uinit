@@ -2,8 +2,8 @@ use rustix::process::getpid;
 use std::process::{Command, exit};
 
 mod config;
-mod mount;
 mod info;
+mod mount;
 
 use crate::config::UinitConfig;
 use crate::info::print_start;
