@@ -25,6 +25,7 @@ pub struct UinitConfig {
     pub args: Vec<String>,
     pub mounts: Vec<Mounts>,
     pub env: Vec<(String, String)>,
+    pub hostname: String,
     exit_policy: ExitPolicy,
 }
 
@@ -34,6 +35,7 @@ impl Default for UinitConfig {
             init_executable: PathBuf::from("/bin/sh"),
             args: vec![],
             mounts: vec![Mounts::Ramfs, Mounts::Tmpdevfs, Mounts::Sysfs, Mounts::Proc],
+            hostname: String::from("uinit-def-utopia-pc"),
             env: vec![
                 (
                     "PATH".into(),

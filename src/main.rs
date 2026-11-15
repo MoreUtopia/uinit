@@ -1,4 +1,4 @@
-use rustix::process::getpid;
+use rustix::{process::getpid, system::sethostname};
 use std::process::{Command, exit};
 
 mod config;
@@ -16,8 +16,6 @@ fn main() {
         exit(1);
     }
 
-    print_start();
-
     let config: UinitConfig = std::fs::read_to_string(PATH)
         .ok()
         .and_then(|content| toml::from_str(&content).ok())
@@ -27,6 +25,12 @@ fn main() {
         });
 
     mount::setup_mounts(&config.mounts);
+    match sethostname(config.hostname.as_bytes()) {
+        Ok(()) => println!("hostname set to {}", config.hostname),
+        Err(e) => println!("error when setting hostname: {e}"),
+    }
+
+    print_start();
 
     loop {
         println!(
