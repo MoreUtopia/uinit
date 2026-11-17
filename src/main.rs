@@ -1,4 +1,4 @@
-use rustix::{process::getpid, system::sethostname};
+use rustix::{process::getpid, system::sethostname, system::uname};
 use std::process::{Command, exit};
 
 mod config;
@@ -9,6 +9,7 @@ use crate::config::UinitConfig;
 use crate::info::print_start;
 
 const PATH: &str = "/etc/uinit.toml";
+const DEFCONFIG: &str = include_str!("default.toml");
 
 fn main() {
     if !getpid().is_init() {
@@ -16,18 +17,32 @@ fn main() {
         exit(1);
     }
 
-    let config: UinitConfig = std::fs::read_to_string(PATH)
-        .ok()
-        .and_then(|content| toml::from_str(&content).ok())
-        .unwrap_or_else(|| {
-            println!("couldn't read config file: {PATH}, using default configuration");
-            UinitConfig::default()
-        });
+    let config: UinitConfig = match std::fs::read_to_string(PATH) {
+        Ok(content) => match toml::from_str(&content) {
+            Ok(config) => config,
+            Err(error) => {
+                eprintln!("invalid config file {PATH}: {error}; using default configuration");
+                toml::from_str(DEFCONFIG).expect("embedded default configuration is invalid")
+            }
+        },
+        Err(error) => {
+            eprintln!("couldn't read config file {PATH}: {error}; using default configuration");
+            toml::from_str(DEFCONFIG).expect("embedded default configuration is invalid")
+        }
+    };
 
     mount::setup_mounts(&config.mounts);
-    match sethostname(config.hostname.as_bytes()) {
-        Ok(()) => println!("hostname set to {}", config.hostname),
-        Err(e) => println!("error when setting hostname: {e}"),
+
+    if let Some(hostname) = config.system.hostname.as_deref() {
+        match sethostname(hostname.as_bytes()) {
+            Ok(()) => println!("hostname set to {hostname}"),
+            Err(error) => println!("error when setting hostname: {error}"),
+        }
+    } else {
+        println!(
+            "hostname set to kernel default: {}",
+            uname().nodename().to_string_lossy()
+        );
     }
 
     print_start();
@@ -35,11 +50,11 @@ fn main() {
     loop {
         println!(
             "running {} with args {}",
-            config.init_executable.display(),
-            config.args.join(" ")
+            config.init.executable.display(),
+            config.init.args.join(" ")
         );
-        let child = Command::new(&config.init_executable)
-            .args(&config.args)
+        let child = Command::new(&config.init.executable)
+            .args(&config.init.args)
             .envs(config.env.iter().map(|(k, v)| (k, v)))
             .spawn();
 

@@ -1,49 +1,33 @@
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use std::path::PathBuf;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
-pub enum ExitPolicy {
-    RestartApp,
-    Shutdown,
-    Reboot,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
-pub enum Mounts {
-    Ramfs,
-    Tmpdevfs,
-    Sysfs,
-    Proc,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(default)]
+#[derive(Debug, Deserialize)]
 pub struct UinitConfig {
-    pub init_executable: PathBuf,
-    pub args: Vec<String>,
-    pub mounts: Vec<Mounts>,
+    pub init: InitConfig,
+    pub system: SystemConfig,
+    #[serde(default)]
+    pub mounts: Vec<MountConfig>,
+    #[serde(default)]
     pub env: Vec<(String, String)>,
-    pub hostname: String,
-    exit_policy: ExitPolicy,
 }
 
-impl Default for UinitConfig {
-    fn default() -> Self {
-        Self {
-            init_executable: PathBuf::from("/bin/sh"),
-            args: vec![],
-            mounts: vec![Mounts::Ramfs, Mounts::Tmpdevfs, Mounts::Sysfs, Mounts::Proc],
-            hostname: String::from("uinit-def-utopia-pc"),
-            env: vec![
-                (
-                    "PATH".into(),
-                    "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/".into(),
-                ),
-                ("TERM".into(), "linux".into()),
-            ],
-            exit_policy: ExitPolicy::RestartApp,
-        }
-    }
+#[derive(Debug, Deserialize)]
+pub struct InitConfig {
+    pub executable: PathBuf,
+    #[serde(default)]
+    pub args: Vec<String>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct SystemConfig {
+    pub hostname: Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct MountConfig {
+    pub source: String,
+    pub target: PathBuf,
+    pub fs_type: String,
+    #[serde(default)]
+    pub flags: Vec<String>,
 }
