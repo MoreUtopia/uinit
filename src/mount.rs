@@ -1,56 +1,47 @@
-use crate::config::Mounts;
+use crate::config::MountConfig;
 use rustix::mount::{MountFlags, mount};
-use std::ffi::CStr;
 
-struct MountSpec {
-    src: &'static str,
-    target: &'static str,
-    fstype: &'static str,
-    flags: MountFlags,
-    data: Option<&'static CStr>,
-}
-
-impl Mounts {
-    fn spec(self) -> MountSpec {
-        match self {
-            Mounts::Ramfs => MountSpec {
-                src: "ramfs",
-                target: "/tmp",
-                fstype: "ramfs",
-                flags: MountFlags::NOSUID | MountFlags::NODEV,
-                data: None,
-            },
-            Mounts::Proc => MountSpec {
-                src: "proc",
-                target: "/proc",
-                fstype: "proc",
-                flags: MountFlags::NOSUID | MountFlags::NODEV | MountFlags::NOEXEC,
-                data: None,
-            },
-            Mounts::Sysfs => MountSpec {
-                src: "sysfs",
-                target: "/sys",
-                fstype: "sysfs",
-                flags: MountFlags::NOSUID | MountFlags::NODEV | MountFlags::NOEXEC,
-                data: None,
-            },
-            Mounts::Tmpdevfs => MountSpec {
-                src: "devtmpfs",
-                target: "/dev",
-                fstype: "devtmpfs",
-                flags: MountFlags::NOSUID,
-                data: None,
-            },
-        }
+fn parse_flags(flags: &[String]) -> Result<MountFlags, String> {
+    let mut parsed = MountFlags::empty();
+    for flag in flags {
+        let value = match flag.as_str() {
+            // right now don't need more
+            "nosuid" => MountFlags::NOSUID,
+            "nodev" => MountFlags::NODEV,
+            "noexec" => MountFlags::NOEXEC,
+            _ => return Err(format!("unsupported mount flag: {flag}")),
+        };
+        parsed |= value;
     }
+    Ok(parsed)
 }
 
-pub fn setup_mounts(mounts: &[Mounts]) {
-    for &m in mounts {
-        let spec = m.spec();
-        match mount(spec.src, spec.target, spec.fstype, spec.flags, spec.data) {
-            Ok(()) => println!("mounted {} on {}", spec.fstype, spec.target),
-            Err(e) => eprintln!("failed to mount {} on {}: {e}", spec.fstype, spec.target),
+pub fn setup_mounts(mounts: &[MountConfig]) {
+    for config in mounts {
+        let flags = match parse_flags(&config.flags) {
+            Ok(flags) => flags,
+            Err(e) => {
+                eprintln!(
+                    "failed to parse flags {} on {}: {e}",
+                    config.fs_type,
+                    config.target.display()
+                );
+                continue;
+            }
+        };
+        match mount(
+            config.source.as_str(),
+            config.target.as_path(),
+            config.fs_type.as_str(),
+            flags,
+            None,
+        ) {
+            Ok(()) => println!("mounted {} on {}", config.fs_type, config.target.display()),
+            Err(e) => eprintln!(
+                "failed to mount {} on {}: {e}",
+                config.fs_type,
+                config.target.display()
+            ),
         }
     }
 }

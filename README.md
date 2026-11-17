@@ -15,7 +15,7 @@ Right now Uinit supports only x86_64.
 - [X] Configuration file - `/etc/uinit.toml`
     - [X] Configure environment variables (like `PATH`).
     - [X] Configure default init executable.
-    - [ ] Configure mount points.
+    - [X] Configure mount points.
 
 ## System Initialization
 - [X] Check for being PID 1.
@@ -23,7 +23,6 @@ Right now Uinit supports only x86_64.
 
 ## Process Management
 - [X] Restart init shell when it exits.
-- [ ] Configurable exit policies.
 - [ ] Track child processes.
 
 ## System

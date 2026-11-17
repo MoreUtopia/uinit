@@ -1,9 +1,0 @@
-init_executable = "/busybox"
-args = ["sh"]
-hostname = "example-hostname"
-exit_policy = "restartapp"
-mounts = ["ramfs", "tmpdevfs", "proc", "sysfs"]
-env = [
-    ["PATH", "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/"],
-    ["TERM", "linux"],
-]
