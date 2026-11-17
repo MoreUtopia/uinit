@@ -32,7 +32,7 @@ fn main() {
     };
 
     mount::setup_mounts(&config.mounts);
-    
+
     if let Some(hostname) = config.system.hostname.as_deref() {
         match sethostname(hostname.as_bytes()) {
             Ok(()) => println!("hostname set to {hostname}"),
