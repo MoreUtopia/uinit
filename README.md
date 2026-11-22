@@ -1,7 +1,7 @@
 # Uinit - BETA
 
 Uinit is a system init for Utopia Kernel.
-It's designed to be more functional than finit, but not to replace it. (because we are using linux abi and finit uses native abi)
+It's designed to be more functional than finit.
 
 The goal is to be lightweight, simple, reliable and easy way to configure (and initialize ofc) Utopia kernel.
 
@@ -18,6 +18,7 @@ Right now Uinit supports only x86_64.
     - [X] Configure mount points.
 
 ## System Initialization
+- [X] Small wrapper to run from native abi
 - [X] Check for being PID 1.
 - [X] Mount pseudo filesystems (`proc`, `sysfs`, `devtmpfs`, `ramfs`).
 
