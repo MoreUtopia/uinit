@@ -1,6 +1,6 @@
 [init]
 executable = "/bin/bash"
-args = [""]
+args = []
 
 [system]
 hostname = "pc_utopia"
