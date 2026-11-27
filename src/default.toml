@@ -5,30 +5,6 @@ args = []
 [system]
 hostname = "pc_utopia"
 env = [
-    ["PATH", "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/"],
+    ["PATH", "/bin:/sbin:/usr/bin:/usr/sbin:/"],
     ["TERM", "linux"],
 ]
-
-[[mounts]]
-source = "ramfs"
-target = "/tmp"
-fs_type = "ramfs"
-flags = ["nosuid", "nodev"]
-
-[[mounts]]
-source = "devtmpfs"
-target = "/dev"
-fs_type = "devtmpfs"
-flags = ["nosuid"]
-
-[[mounts]]
-source = "sysfs"
-target = "/sys"
-fs_type = "sysfs"
-flags = ["nosuid", "nodev", "noexec"]
-
-[[mounts]]
-source = "proc"
-target = "/proc"
-fs_type = "proc"
-flags = ["nosuid", "nodev", "noexec"]

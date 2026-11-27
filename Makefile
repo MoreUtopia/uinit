@@ -1,20 +1,26 @@
-.PHONY: all build build_uinit build_init rootfs
-
-UINIT_TARGET := x86_64-unknown-linux-gnu
-INIT_TARGET  := x86_64-unknown-none
+.PHONY: all build build_uinit build_init build_uinit_ctl rootfs
 
 all: build
 
-build: build_uinit build_init
+build: build_uinit build_init build_uinit_ctl
 
 rootfs:
-	mkdir -p rootfs
+	mkdir -p rootfs/usr/sbin rootfs/usr/bin rootfs/etc/uinit.d/hooks
 
 build_uinit: | rootfs
-	cargo build --release --target $(UINIT_TARGET)
-	cp target/$(UINIT_TARGET)/release/uinit rootfs/uinit
+	cargo build --release
+	cp target/x86_64-unknown-linux-gnu/release/uinit rootfs/usr/sbin/uinit
 
 build_init: | rootfs
 	cd init && \
-		cargo build --release --target $(INIT_TARGET) && \
-		cp target/$(INIT_TARGET)/release/init ../rootfs/init
+		cargo build --release && \
+		cp target/x86_64-unknown-none/release/init ../rootfs/init
+
+build_uinit_ctl: | rootfs
+	cd uinit-ctl && \
+		cargo build --release && \
+		cp target/x86_64-unknown-linux-gnu/release/uinit-ctl ../rootfs/usr/bin/uinit-ctl
+
+clean:
+	cargo clean
+	rm -rf rootfs

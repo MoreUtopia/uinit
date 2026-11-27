@@ -1,15 +1,22 @@
-use rustix::{process::getpid, system::sethostname, system::uname};
+use rustix::{
+    process::{WaitOptions, getpid, waitpid},
+    system::{sethostname, uname},
+};
 use std::process::{Command, exit};
 
+mod cmd;
 mod config;
+mod hook;
 mod info;
 mod mount;
 
 use crate::config::UinitConfig;
 use crate::info::print_start;
 
-const PATH: &str = "/etc/uinit.toml";
+const PATH: &str = "/etc/uinit.d/uinit.toml";
 const DEFCONFIG: &str = include_str!("default.toml");
+const CMD_PATH: &str = "/tmp/init-rq";
+const HOOKS_DIR: &str = "/etc/uinit.d/hooks";
 
 fn main() {
     if !getpid().is_init() {
@@ -31,7 +38,29 @@ fn main() {
         }
     };
 
-    mount::setup_mounts(&config.mounts);
+    mount::setup_mounts();
+    let _ = std::fs::write(CMD_PATH, "");
+
+    let hook_mgr = match hook::HookManager::new() {
+        Ok(mut mgr) => {
+            if let Err(e) = mgr.load_from_dir(HOOKS_DIR) {
+                eprintln!("hooks load error: {e}");
+            }
+            Some(mgr)
+        }
+        Err(e) => {
+            eprintln!("hooks init error: {e}");
+            None
+        }
+    };
+
+    let trigger_hook = |event: hook::HookEvent| {
+        if let Some(mgr) = &hook_mgr {
+            mgr.trigger(event);
+        }
+    };
+
+    trigger_hook(hook::HookEvent::OnBoot);
 
     if let Some(hostname) = config.system.hostname.as_deref() {
         match sethostname(hostname.as_bytes()) {
@@ -48,6 +77,7 @@ fn main() {
     print_start();
 
     loop {
+        trigger_hook(hook::HookEvent::PreSpawn);
         println!(
             "running {} with args {}",
             config.init.executable.display(),
@@ -59,15 +89,24 @@ fn main() {
             .spawn();
 
         match child {
-            Ok(mut app) => match app.wait() {
-                Ok(status) => {
-                    if let Some(exit_code) = status.code() {
-                        eprintln!("exited: {exit_code}");
+            Ok(mut app) => loop {
+                match app.try_wait() {
+                    Ok(Some(status)) => {
+                        if let Some(exit_code) = status.code() {
+                            eprintln!("exited: {exit_code}");
+                        }
+                        trigger_hook(hook::HookEvent::OnExit);
+                        break;
                     }
+                    Ok(None) => {}
+                    Err(e) => eprintln!("error waiting for main process: {e}"),
                 }
-                Err(e) => {
-                    eprintln!("error: {e}");
-                }
+
+                while waitpid(None, WaitOptions::NOHANG).ok().flatten().is_some() {}
+
+                cmd::check_file(CMD_PATH, &hook_mgr);
+
+                std::thread::sleep(std::time::Duration::from_millis(100));
             },
             Err(e) => {
                 eprintln!("init executable failed: {e}");
