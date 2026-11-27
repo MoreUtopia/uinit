@@ -1,4 +1,4 @@
-# Uinit - BETA
+# Uinit
 
 Uinit is a system init for Utopia Kernel, designed to be more functional than `finit`.
 The goal is to be a lightweight (About 1MB all tools), simple, reliable, and easy way to configure and initialize Utopia Kernel.
